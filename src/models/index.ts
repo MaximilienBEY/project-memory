@@ -1,4 +1,4 @@
-import User from "./User"
+import User from "./user"
 import { Database } from "./utils/database"
 
 const database = new Database("main", 0.1)

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
   import { useCounterStore } from '@/store/counter';
-  import User from "@/models/User"
+  import User from "@/models/user"
   
   const counter = useCounterStore()
   User.create({
