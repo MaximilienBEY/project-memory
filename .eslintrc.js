@@ -28,7 +28,7 @@ module.exports = {
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:prettier/recommended",
-    // "plugin:vue/vue3-recommended",
+    // "plugin:vue/essential",
   ],
   plugins: ["simple-import-sort", "prettier"],
   rules: {
@@ -51,5 +51,14 @@ module.exports = {
     "@typescript-eslint/no-non-null-assertion": "off",
     "simple-import-sort/imports": 1,
     "simple-import-sort/exports": 1,
+    "@typescript-eslint/ban-types": [
+      "error",
+      {
+        types: {
+          Function: false,
+        },
+        extendDefaults: true,
+      },
+    ],
   },
 }

@@ -1,19 +1,13 @@
 <script lang="ts" setup>
-  import Category from "@/models/category"
   import { useCounterStore } from '@/store/counter';
+  import User from "@/models/User"
   
   const counter = useCounterStore()
-  
-  Category.findAll({
-    where: {
-      createdAt: {
-        $lt: new Date("2023-03-13 17:10")
-      }
-    }
-  }).then(category => {
-    console.log(category)
+  User.create({
+    name: Math.random().toString(),
+    email: "bey.maximilien@gmail.com",
+    password: "123456"
   })
-
 </script>
 
 <template>
