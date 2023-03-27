@@ -4,6 +4,7 @@ import {
   CollectionType,
   CreateAttributes,
   FindOptions,
+  IncludeAttributes,
   ModelStatic,
   TableType,
   UpdateAttributes,
@@ -11,7 +12,7 @@ import {
 } from "./types"
 
 const getTableInstance = <M extends Model>(self: ModelStatic<M>): TableType => {
-  const db = self.prototype.db as Dexie
+  const db = self.prototype._db as Dexie
   if (!db) throw new Error(`Model ${self.name} not initialized with database.`)
   return db.table(self.prototype._tableName)
 }
@@ -140,6 +141,134 @@ const getWhereCollecition = <M extends Model>(
   if (!collection) collection = table.toCollection()
   return collection
 }
+const includesRelations = async <M extends Model>(
+  self: M,
+  relationsClass: IncludeAttributes,
+) => {
+  const prototype = (self.constructor as ModelStatic<M>).prototype
+  const selfTableName = prototype._tableName
+
+  const foreignKeys = Object.keys(prototype._foreignKey || {})
+    .map((key) => {
+      if (!prototype._foreignKey || !prototype._foreignKey[key]) return
+      const foreignKey = prototype._foreignKey[key]() as ModelStatic<Model>
+      const tableName = foreignKey.prototype._tableName
+      return {
+        key,
+        tableName,
+      }
+    })
+    .filter(Boolean)
+  const belongsTo = prototype._belongsTo || {}
+  const hasMany = prototype._hasMany || {}
+  const hasOne = prototype._hasOne || {}
+
+  const belongsToKeys = Object.keys(belongsTo)
+  const hasManyKeys = Object.keys(hasMany)
+  const hasOneKeys = Object.keys(hasOne)
+
+  const relations = relationsClass.map((relation) => {
+    const model = "model" in relation ? relation.model : relation
+    const includes = "includes" in relation ? relation.includes ?? null : null
+    return {
+      name: model.prototype._tableName,
+      model,
+      includes,
+    }
+  })
+
+  await Promise.all(
+    belongsToKeys.map(async (key) => {
+      const belongsToClass: ModelStatic<Model> = belongsTo[key]()
+      const table = getTableInstance(belongsToClass)
+      const tableName = belongsToClass.prototype._tableName
+
+      const relation = relations.find(({ name }) => name === tableName)
+      if (!relation) return
+
+      const foreignKey = foreignKeys.find((key) => key.tableName === tableName)
+      if (!foreignKey) return
+
+      const primaryKey = Object.entries(self).find(
+        ([key]) => key === foreignKey?.key,
+      )?.[1]
+      if (!primaryKey || typeof primaryKey !== "number") return
+
+      const modelData = await table.get(primaryKey)
+      const model = modelData ? await asignModel(belongsToClass, modelData) : null
+      if (model && relation.includes) await includesRelations(model, relation.includes)
+      Object.assign(self, { [key]: model })
+    }),
+  )
+  await Promise.all(
+    hasManyKeys.map(async (key) => {
+      const hasManyClass: ModelStatic<Model> = hasMany[key]()
+      const table = getTableInstance(hasManyClass)
+      const tableName = hasManyClass.prototype._tableName
+
+      const relation = relations.find(({ name }) => name === tableName)
+      if (!relation) return
+
+      const prototype = hasManyClass.prototype
+      const foreignKeys = Object.keys(prototype._foreignKey || {})
+        .map((key) => {
+          if (!prototype._foreignKey || !prototype._foreignKey[key]) return
+          const foreignKey = prototype._foreignKey[key]() as ModelStatic<Model>
+          const tableName = foreignKey.prototype._tableName
+          return {
+            key,
+            tableName,
+          }
+        })
+        .filter(Boolean)
+      const foreignKey = foreignKeys.find((key) => key.tableName === selfTableName)
+      if (!foreignKey) return
+
+      const modelsData = await table.where(foreignKey.key).equals(self.id).toArray()
+      const models = await Promise.all(
+        modelsData.map(async (modelData) => {
+          const model = asignModel(hasManyClass, modelData)
+          if (relation.includes) await includesRelations(model, relation.includes)
+          return model
+        }),
+      )
+      Object.assign(self, { [key]: models })
+      // if (relation)
+      // const foreignKey = foreignKeys.find((key) => key.tableName === tableName)
+      // console.log(foreignKey)
+    }),
+  )
+  await Promise.all(
+    hasOneKeys.map(async (key) => {
+      const hasOneClass: ModelStatic<Model> = hasOne[key]()
+      const table = getTableInstance(hasOneClass)
+      const tableName = hasOneClass.prototype._tableName
+
+      const relation = relations.find(({ name }) => name === tableName)
+      if (!relation) return
+
+      const prototype = hasOneClass.prototype
+      const foreignKeys = Object.keys(prototype._foreignKey || {})
+        .map((key) => {
+          if (!prototype._foreignKey || !prototype._foreignKey[key]) return
+          const foreignKey = prototype._foreignKey[key]() as ModelStatic<Model>
+          const tableName = foreignKey.prototype._tableName
+          return {
+            key,
+            tableName,
+          }
+        })
+        .filter(Boolean)
+      const foreignKey = foreignKeys.find((key) => key.tableName === selfTableName)
+      if (!foreignKey) return
+
+      const modelData = await table.where(foreignKey.key).equals(self.id).first()
+      const model = modelData ? asignModel(hasOneClass, modelData) : null
+      if (model && relation.includes) await includesRelations(model, relation.includes)
+      Object.assign(self, { [key]: model })
+    }),
+  )
+}
 
 export abstract class Model {
   declare readonly id: number
@@ -149,11 +278,15 @@ export abstract class Model {
   public static async create<M extends Model>(
     this: ModelStatic<M>,
     data: CreateAttributes<M>,
+    options?: { includes: IncludeAttributes },
   ): Promise<M> {
+    const { includes } = options || {}
     const payload = { ...data, createdAt: new Date(), updatedAt: new Date() }
     await getTableInstance(this).add(payload)
 
-    return asignModel(this, payload)
+    const model = asignModel(this, payload)
+    if (includes) await includesRelations(model, includes)
+    return model
   }
   public static async update<M extends Model>(
     this: ModelStatic<M>,
@@ -164,9 +297,15 @@ export abstract class Model {
     const table = getTableInstance(this)
 
     const collection = getWhereCollecition(table, where)
+    if (order) {
+      const [key, direction] = Array.isArray(order) ? order : [order, "ASC"]
+      if (typeof key === "string") {
+        collection.sortBy(key)
+        if (direction === "DESC") collection.reverse()
+      }
+    }
     if (offset) collection.offset(offset)
     if (limit) collection.limit(limit)
-    if (order === "DESC") collection.reverse()
 
     const payload = { ...data, updatedAt: new Date() }
     await collection
@@ -181,9 +320,15 @@ export abstract class Model {
     const table = getTableInstance(this)
 
     const collection = getWhereCollecition(table, where)
+    if (order) {
+      const [key, direction] = Array.isArray(order) ? order : [order, "ASC"]
+      if (typeof key === "string") {
+        collection.sortBy(key)
+        if (direction === "DESC") collection.reverse()
+      }
+    }
     if (offset) collection.offset(offset)
     if (limit) collection.limit(limit)
-    if (order === "DESC") collection.reverse()
 
     const rows = await collection
       .toArray()
@@ -193,45 +338,69 @@ export abstract class Model {
   public static async findById<M extends Model>(
     this: ModelStatic<M>,
     id: number,
+    options?: { includes: IncludeAttributes },
   ): Promise<M | null> {
+    const { includes } = options || {}
     const table = getTableInstance(this)
     const data = await table.get(id)
     if (!data) return null
 
-    return asignModel(this, data)
+    const model = asignModel(this, data)
+    if (includes) await includesRelations(model, includes)
+    return model
   }
   public static async findOne<M extends Model>(
     this: ModelStatic<M>,
     options?: FindOptions<M>,
   ): Promise<M | null> {
-    const { where, limit, offset, order } = options || {}
+    const { where, limit, offset, order, includes } = options || {}
     const table = getTableInstance(this)
 
     const collection = getWhereCollecition(table, where)
+    if (order) {
+      const [key, direction] = Array.isArray(order) ? order : [order, "ASC"]
+      if (typeof key === "string") {
+        collection.sortBy(key)
+        if (direction === "DESC") collection.reverse()
+      }
+    }
     if (offset) collection.offset(offset)
     if (limit) collection.limit(limit)
-    if (order === "DESC") collection.reverse()
 
     const data = await collection.first()
     if (!data) return null
 
-    return asignModel(this, data)
+    const model = asignModel(this, data)
+    if (includes) await includesRelations(model, includes)
+    return model
   }
-  public static async findMany<M extends Model>(
+  public static async findAll<M extends Model>(
     this: ModelStatic<M>,
     options?: FindOptions<M>,
   ): Promise<M[]> {
-    const { where, limit, offset, order } = options || {}
+    const { where, limit, offset, order, includes } = options || {}
     const table = getTableInstance(this)
 
     const collection = getWhereCollecition(table, where)
+    if (order) {
+      const [key, direction] = Array.isArray(order) ? order : [order, "ASC"]
+      if (typeof key === "string") {
+        collection.sortBy(key)
+        if (direction === "DESC") collection.reverse()
+      }
+    }
     if (offset) collection.offset(offset)
     if (limit) collection.limit(limit)
-    if (order === "DESC") collection.reverse()
 
-    const data = await collection.toArray()
+    const rows = await collection.toArray()
 
-    return data.map((d) => asignModel(this, d))
+    return Promise.all(
+      rows.map(async (row) => {
+        const model = asignModel(this, row)
+        if (includes) await includesRelations(model, includes)
+        return model
+      }),
+    )
   }
   public static async count<M extends Model>(
     this: ModelStatic<M>,
@@ -267,12 +436,17 @@ export abstract class Model {
     const table = getTableInstance(this.constructor as ModelStatic<M>)
     await table.delete(this.id)
   }
-  public async refresh<M extends Model>(this: M): Promise<M> {
+  public async refresh<M extends Model>(
+    this: M,
+    options?: { includes: IncludeAttributes },
+  ): Promise<M> {
+    const { includes } = options || {}
     const table = getTableInstance(this.constructor as ModelStatic<M>)
     const data = await table.get(this.id)
     if (!data) throw new Error("Record not found")
 
     Object.assign(this, data)
+    if (includes) await includesRelations(this, includes)
 
     return this
   }

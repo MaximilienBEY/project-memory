@@ -25,6 +25,13 @@ export type CreateAttributes<M extends Model> = Pick<
   >
 >
 export type UpdateAttributes<M extends Model> = Partial<CreateAttributes<M>>
+export type IncludeAttributes = (
+  | { new (): Model }
+  | {
+      model: { new (): Model }
+      includes?: IncludeAttributes
+    }
+)[]
 
 type WhereAttribute<T> = T extends Model | Model[]
   ? null
@@ -56,11 +63,16 @@ export type WhereAttributes<M extends Model> =
   | {
       $or?: WhereAttributes<M>[]
     }
+type SortKeys<M extends Model> = keyof Pick<
+  WhereAttributesBeforeFiltering<M>,
+  ExcludeNullKeys<WhereAttributesBeforeFiltering<M>>
+>
 export type FindOptions<M extends Model> = {
   where?: WhereAttributes<M>
   limit?: number
   offset?: number
-  order?: "ASC" | "DESC"
+  order?: SortKeys<M> | [SortKeys<M>, "ASC" | "DESC"]
+  includes?: IncludeAttributes
 }
 
 export type TableType = Table<any, IndexableType>

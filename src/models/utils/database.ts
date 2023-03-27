@@ -18,7 +18,7 @@ export class Database {
 
       const tableString = `++id,${model.prototype._columns.join(",")},createdAt,updatedAt`
       this.models[model.prototype._tableName] = tableString
-      model.prototype.db = this.db
+      model.prototype._db = this.db
     })
   }
   public async init() {

@@ -1,7 +1,7 @@
-<template>
-  <HelloWorld />
-</template>
-
 <script lang="ts" setup>
-  import HelloWorld from '@/components/HelloWorld.vue'
+import CreateVideoCard from "@/components/CreateVideoCard.vue"
 </script>
+
+<template>
+  <CreateVideoCard />
+</template>
