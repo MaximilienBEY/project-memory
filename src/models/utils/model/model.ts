@@ -416,7 +416,8 @@ export abstract class Model {
     const table = getTableInstance(this.constructor as ModelStatic<M>)
     await table.update(this.id, payload)
 
-    return asignModel(this.constructor as ModelStatic<M>, { ...this, ...payload })
+    Object.assign(this, payload)
+    return this
   }
   public async save<M extends Model>(this: M): Promise<M> {
     const payload: Record<string, any> = {}

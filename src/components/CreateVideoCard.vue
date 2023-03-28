@@ -4,7 +4,12 @@ import { computed, ref, watchEffect } from "vue"
 
 import Card from "@/models/card"
 
-const ffmpeg = createFFmpeg({ log: true })
+const ffmpeg = createFFmpeg({
+  log: true,
+  logger: ({ type, message }) => {
+    console.log(type, message)
+  },
+})
 const ffmpegLoading = ref(true)
 
 const loading = ref(false)
