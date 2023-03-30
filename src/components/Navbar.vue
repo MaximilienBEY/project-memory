@@ -7,9 +7,15 @@
     <template v-slot:append>
       <ul class="mr-16 font-weight-medium app-bar-links">
         <li>
-          <v-btn to="/categories" class="text-subtitle-1" :active="false"
-            >Categories</v-btn
-          >
+          <v-btn to="/categories" class="text-subtitle-1" :active="false">
+            Categories
+          </v-btn>
+        </li>
+        <li>
+          <v-btn to="/themes" class="text-subtitle-1" :active="false">Themes</v-btn>
+        </li>
+        <li>
+          <v-btn to="/cards" class="text-subtitle-1" :active="false">Cards</v-btn>
         </li>
       </ul>
       <v-btn color="primary" variant="flat" to="/quiz">Start a quiz</v-btn>

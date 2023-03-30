@@ -2,7 +2,8 @@
 import { computed } from "vue"
 import { useRoute } from "vue-router"
 
-import Theme from "@/models/theme"
+import Card from "@/models/card"
+import { useCardStore } from "@/store/card"
 import { useCategoryStore } from "@/store/category"
 import { useThemeStore } from "@/store/theme"
 
@@ -10,19 +11,26 @@ const route = useRoute()
 
 const category = useCategoryStore()
 const actualCategory = computed(() => {
-  const id = parseInt(route.params.id as string)
+  const id = parseInt(route.params.categoryId as string)
   return category.list.find((c) => c.id === id) ?? null
 })
 
 const theme = useThemeStore()
-const themes = computed((): Theme[] | null => {
-  if (!actualCategory.value || theme.loading) return null
-  return theme.list.filter((t) => t.categoryId === actualCategory.value?.id)
+const actualTheme = computed(() => {
+  const id = parseInt(route.params.themeId as string)
+  return theme.list.find((t) => t.id === id) ?? null
 })
 
-const handleMenu = (value: string, t: Theme) => {
-  if (value === "edit") theme.openEdit(t)
-  else if (value === "delete") theme.openDelete(t)
+const card = useCardStore()
+const cards = computed((): Card[] | null => {
+  if (!actualTheme.value || card.loading) return null
+  return card.list.filter((t) => t.themeId === actualTheme.value?.id)
+})
+
+const handleMenu = (value: string, c: Card) => {
+  console.log(value, c)
+  // if (value === "edit") theme.openEdit(t)
+  // else if (value === "delete") theme.openDelete(t)
 }
 </script>
 
@@ -33,6 +41,11 @@ const handleMenu = (value: string, t: Theme) => {
         <h5 class="text-body-1 font-weight-medium font-italic">Category not found</h5>
       </div></template
     >
+    <template v-else-if="!actualTheme">
+      <div class="d-flex justify-center">
+        <h5 class="text-body-1 font-weight-medium font-italic">Theme not found</h5>
+      </div></template
+    >
     <template v-else>
       <v-breadcrumbs
         :items="[
@@ -41,40 +54,41 @@ const handleMenu = (value: string, t: Theme) => {
           {
             title: actualCategory.title,
             to: `/categories/${actualCategory.id}`,
-            disabled: true,
+            disabled: false,
+          },
+          {
+            title: actualTheme.title,
+            to: `/categories/${actualCategory.id}/themes/${actualTheme.id}`,
           },
         ]"
       />
       <div class="category-title mt-1 mt-md-2 mt-lg-4 mt-xl-6">
-        <h3 class="text-h4 font-weight-bold">{{ actualCategory.title }}</h3>
-        <v-btn variant="tonal" @click="() => theme.openNew(actualCategory!)">New</v-btn>
+        <h3 class="text-h4 font-weight-bold">{{ actualTheme.title }}</h3>
+        <v-btn variant="tonal" @click="() => card.openNew(actualTheme!)">New</v-btn>
       </div>
       <v-container fluid class="mt-4 mt-md-6 mt-lg-8">
-        <template v-if="!themes">
+        <template v-if="!cards">
           <div class="d-flex justify-center">
             <v-progress-circular indeterminate color="primary"></v-progress-circular>
           </div>
         </template>
-        <template v-else-if="themes.length === 0">
+        <template v-else-if="cards.length === 0">
           <div class="d-flex justify-center">
-            <h5 class="text-body-1 font-weight-medium font-italic">No themes</h5>
+            <h5 class="text-body-1 font-weight-medium font-italic">No cards</h5>
           </div>
         </template>
         <template v-else>
           <v-row>
-            <v-col v-for="theme in themes" :key="theme.id" cols="12" sm="6" md="4">
-              <v-card
-                elevation="4"
-                :to="`/categories/${actualCategory.id}/themes/${theme.id}`"
-              >
+            <v-col v-for="card in cards" :key="card.id" cols="12" sm="6" md="4" lg="3">
+              <v-card elevation="4">
                 <template v-slot:title>
                   <div class="d-flex justify-space-between align-center">
-                    <h6 class="text-h6">{{ theme.title }}</h6>
+                    <h6 class="text-h6">test</h6>
                     <v-btn size="small" icon variant="text" @click.stop.prevent>
                       <v-icon>mdi-dots-vertical</v-icon>
                       <v-menu activator="parent">
                         <v-list
-                          @click:select="($event) => handleMenu($event.id as string, theme)"
+                          @click:select="($event) => handleMenu($event.id as string, card)"
                         >
                           <v-list-item value="edit">Edit</v-list-item>
                           <v-list-item value="delete">Delete</v-list-item>
@@ -83,9 +97,7 @@ const handleMenu = (value: string, t: Theme) => {
                     </v-btn>
                   </div>
                 </template>
-                <template v-slot:text>
-                  {{ theme.description ?? "No description" }}
-                </template>
+                <template v-slot:text>No description</template>
               </v-card>
             </v-col>
           </v-row></template

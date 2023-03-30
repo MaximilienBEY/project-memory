@@ -9,6 +9,9 @@ import { Table } from "./utils/table"
 })
 class Card extends Model {
   @Column()
+  declare title: string
+
+  @Column()
   declare rectoType: "text" | "image" | "audio" | "video"
   @Column()
   declare rectoText?: string

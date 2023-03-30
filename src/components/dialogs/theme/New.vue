@@ -1,18 +1,21 @@
 <script setup lang="ts">
 import { ref, watch } from "vue"
 
+import { useCategoryStore } from "@/store/category"
 import { useThemeStore } from "@/store/theme"
 
+const category = useCategoryStore()
 const theme = useThemeStore()
 
 const titleRef = ref("")
 const descriptionRef = ref("")
+const categoryId = ref<number | null>(null)
 const loading = ref(false)
 const showError = ref(false)
 
 const create = async () => {
-  if (!theme.newTheme) return
-  if (!titleRef.value) {
+  const catId = theme.newTheme?.id ?? categoryId.value
+  if (!titleRef.value || catId === null) {
     showError.value = true
     return
   }
@@ -20,7 +23,7 @@ const create = async () => {
   await theme.new({
     title: titleRef.value,
     description: descriptionRef.value || undefined,
-    categoryId: theme.newTheme.id,
+    categoryId: catId,
   })
 
   loading.value = false
@@ -34,10 +37,11 @@ watch([theme], ([theme]) => {
 
   titleRef.value = ""
   descriptionRef.value = ""
+  categoryId.value = null
   showError.value = false
 })
-watch([titleRef], () => {
-  if (titleRef.value) showError.value = false
+watch([titleRef, categoryId], () => {
+  if (titleRef.value && categoryId.value) showError.value = false
   else showError.value = true
 })
 </script>
@@ -52,12 +56,22 @@ watch([titleRef], () => {
         <v-form>
           <v-text-field
             v-model="titleRef"
-            :error-messages="showError ? 'Title is required' : ''"
+            :error-messages="showError && !titleRef ? 'Title is required' : ''"
             label="Title *"
             required
             variant="outlined"
           />
           <v-textarea v-model="descriptionRef" label="Description" variant="outlined" />
+          <v-autocomplete
+            v-if="!theme.newTheme?.id"
+            v-model="categoryId"
+            :error-messages="showError && !categoryId ? 'Category is required' : ''"
+            :items="category.list"
+            item-text="title"
+            item-value="id"
+            label="Category"
+            variant="outlined"
+          />
         </v-form>
       </v-card-text>
       <v-card-actions>

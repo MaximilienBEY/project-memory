@@ -11,13 +11,33 @@ const router = createRouter({
     },
     {
       path: "/categories",
-      name: "categories",
-      component: () => import("@/views/Categories.vue"),
+      name: "category_list",
+      component: () => import("@/views/CategoryList.vue"),
+    },
+    {
+      path: "/themes",
+      name: "theme_list",
+      component: () => import("@/views/ThemeList.vue"),
+    },
+    {
+      path: "/cards",
+      name: "card_list",
+      component: () => import("@/views/CardList.vue"),
     },
     {
       path: "/categories/:id",
       name: "themes",
       component: () => import("@/views/Themes.vue"),
+    },
+    {
+      path: "/categories/:categoryId/themes/:themeId",
+      name: "cards",
+      component: () => import("@/views/Cards.vue"),
+    },
+    {
+      path: "/test",
+      name: "test",
+      component: () => import("@/views/Test.vue"),
     },
   ],
 })

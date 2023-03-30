@@ -17,11 +17,11 @@ export const useThemeStore = defineStore("theme", () => {
 
   const editRef = ref<Theme | null>(null)
   const editOpenRef = ref(false)
+  const editWithCategoryRef = ref(false)
 
-  const openNewTheme = (category: Category) => {
-    newRef.value = category
+  const openNewTheme = (category?: Category) => {
+    newRef.value = category ?? null
     newOpenRef.value = true
-    console.log(category)
   }
   const newTheme = async ({
     title,
@@ -48,15 +48,20 @@ export const useThemeStore = defineStore("theme", () => {
     deleteOpenRef.value = false
   }
 
-  const openEditTheme = (theme: Theme) => {
+  const openEditTheme = (theme: Theme, withCategory?: boolean) => {
     editRef.value = theme
     editOpenRef.value = true
+    editWithCategoryRef.value = !!withCategory
   }
   const editTheme = async (
     theme: Theme,
-    { title, description }: { title: string; description?: string },
+    {
+      title,
+      description,
+      categoryId,
+    }: { title: string; description?: string; categoryId?: number },
   ) => {
-    await theme.update({ title, description })
+    await theme.update({ title, description, categoryId })
     themesRef.value = themesRef.value.slice()
     editRef.value = null
     editOpenRef.value = false
@@ -85,6 +90,7 @@ export const useThemeStore = defineStore("theme", () => {
 
     editTheme: editRef,
     editOpen: editOpenRef,
+    editWithCategory: editWithCategoryRef,
     openEdit: openEditTheme,
     edit: editTheme,
   }

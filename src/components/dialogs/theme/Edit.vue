@@ -1,17 +1,24 @@
 <script setup lang="ts">
 import { ref, watch } from "vue"
 
+import { useCategoryStore } from "@/store/category"
 import { useThemeStore } from "@/store/theme"
 
+const category = useCategoryStore()
 const theme = useThemeStore()
 
 const titleRef = ref("")
 const descriptionRef = ref("")
+const categoryId = ref<number | null>(null)
 const loading = ref(false)
 const showError = ref(false)
 
 const edit = async () => {
-  if (!titleRef.value || !theme.editTheme) {
+  if (
+    !titleRef.value ||
+    !theme.editTheme ||
+    (theme.editWithCategory && categoryId.value === null)
+  ) {
     showError.value = true
     return
   }
@@ -19,6 +26,7 @@ const edit = async () => {
   await theme.edit(theme.editTheme, {
     title: titleRef.value,
     description: descriptionRef.value || undefined,
+    categoryId: categoryId.value ?? undefined,
   })
 
   loading.value = false
@@ -32,13 +40,15 @@ watch([theme], ([theme]) => {
   if (theme.editOpen) {
     titleRef.value = theme.editTheme?.title || ""
     descriptionRef.value = theme.editTheme?.description || ""
+    categoryId.value = theme.editTheme?.categoryId || null
   } else {
     titleRef.value = ""
     descriptionRef.value = ""
+    categoryId.value = null
   }
 })
-watch([titleRef], () => {
-  if (titleRef.value) showError.value = false
+watch([titleRef, categoryId], () => {
+  if (titleRef.value && categoryId.value) showError.value = false
   else showError.value = true
 })
 </script>
@@ -63,6 +73,16 @@ watch([titleRef], () => {
             label="Description"
             variant="outlined"
           ></v-textarea>
+          <v-autocomplete
+            v-if="theme.editWithCategory"
+            v-model="categoryId"
+            :error-messages="showError && !categoryId ? 'Category is required' : ''"
+            :items="category.list"
+            item-text="title"
+            item-value="id"
+            label="Category"
+            variant="outlined"
+          />
         </v-form>
       </v-card-text>
       <v-card-actions>

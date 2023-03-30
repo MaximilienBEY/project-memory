@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import DeleteCard from "./dialogs/card/Delete.vue"
+import EditCard from "./dialogs/card/Edit.vue"
+import NewCard from "./dialogs/card/New.vue"
 import DeleteCategory from "./dialogs/category/Delete.vue"
 import EditCategory from "./dialogs/category/Edit.vue"
 import NewCategory from "./dialogs/category/New.vue"
@@ -15,6 +18,10 @@ import NewTheme from "./dialogs/theme/New.vue"
   <NewTheme />
   <DeleteTheme />
   <EditTheme />
+
+  <NewCard />
+  <DeleteCard />
+  <EditCard />
 </template>
 
 <style lang="scss">
