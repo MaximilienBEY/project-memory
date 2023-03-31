@@ -37,6 +37,8 @@ const refreshValue = () => {
   versoContent.value = ""
   versoMedia.value = null
   showError.value = false
+  convertingType.value = null
+  ffmpeg.cancel()
 }
 const create = async () => {
   const themId = card.newCard?.id ?? themeId.value

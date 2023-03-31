@@ -36,6 +36,8 @@ const refreshValue = () => {
   versoMedia.value = null
   themeId.value = null
   showError.value = false
+  convertingType.value = null
+  ffmpeg.cancel()
 }
 const edit = async () => {
   if (!card.editCard) return

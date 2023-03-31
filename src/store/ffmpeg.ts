@@ -33,17 +33,21 @@ export const useFfmpegStore = defineStore("ffmpeg", () => {
       )
     if (!videoBitrate) return null
 
-    await ffmpeg.value.run(
-      "-i",
-      inputFile,
-      "-c:v",
-      "h264",
-      "-b:v",
-      `${videoBitrate}k`,
-      "-c:a",
-      "aac",
-      outputFile,
-    )
+    const success = await ffmpeg.value
+      .run(
+        "-i",
+        inputFile,
+        "-c:v",
+        "h264",
+        "-b:v",
+        `${videoBitrate}k`,
+        "-c:a",
+        "aac",
+        outputFile,
+      )
+      .then(() => true)
+      .catch(() => false)
+    if (!success) return null
 
     const data = ffmpeg.value.FS("readFile", outputFile)
     percent.value = 0
@@ -80,6 +84,16 @@ export const useFfmpegStore = defineStore("ffmpeg", () => {
     percent.value = 0
     return data
   }
+  const cancel = async () => {
+    if (!ffmpeg.value.isLoaded()) return
+
+    ffmpeg.value.exit()
+    loading.value = true
+
+    await ffmpeg.value.load()
+    percent.value = 0
+    loading.value = false
+  }
 
   onMounted(async () => {
     await ffmpeg.value.load()
@@ -91,5 +105,6 @@ export const useFfmpegStore = defineStore("ffmpeg", () => {
     convertVideo,
     convertAudio,
     convertImage,
+    cancel,
   }
 })
