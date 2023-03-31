@@ -32,4 +32,20 @@ import NewTheme from "./dialogs/theme/New.vue"
     padding: 16px;
   }
 }
+.card-title-container {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  padding: 8px 16px;
+  & > span,
+  & > h6 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+}
+.card-description-container {
+  padding: 0px 16px 12px 16px;
+}
 </style>

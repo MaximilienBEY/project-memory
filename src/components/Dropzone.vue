@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { defineProps, ref } from "vue"
 
+import { MediaInterface } from "@/types/card"
+
 const authorizedTypes = ["image/", "video/", "audio/"]
 
 const props = defineProps({
@@ -18,6 +20,9 @@ const props = defineProps({
   },
   percent: {
     type: Number,
+  },
+  media: {
+    type: Object as () => MediaInterface | null,
   },
 })
 const emit = defineEmits<{
@@ -37,6 +42,11 @@ const onFileChange = (e: Event) => {
 const onClick = () => {
   if (props.disabled) return
   inputFileRef.value?.click()
+}
+const openMedia = () => {
+  if (!props.media) return
+
+  window.open(props.media.url, "_blank")
 }
 const onDragEnter = (e: DragEvent) => {
   if (props.disabled) return
@@ -62,9 +72,9 @@ const onDrop = (e: DragEvent) => {
 <template>
   <div class="container">
     <div
-      :class="`dropzone ${error ? 'error' : ''} ${dragOver ? 'drag-over' : ''} ${
-        disabled ? 'disabled' : ''
-      }`"
+      :class="`dropzone ${media ? 'active' : ''} ${error ? 'error' : ''} ${
+        dragOver ? 'drag-over' : ''
+      } ${disabled ? 'disabled' : ''}`"
     >
       <input
         ref="inputFileRef"
@@ -73,8 +83,10 @@ const onDrop = (e: DragEvent) => {
         @change="onFileChange"
         accept="image/*,video/*,audio/*"
       />
-      <span v-if="!disabled">Click or drop a file here</span>
-      <span v-else>{{ disabledText }}</span>
+      <template v-if="!media">
+        <span v-if="!disabled">Click or drop a file here</span>
+        <span v-else>{{ disabledText }}</span>
+      </template>
       <div
         class="draggable-zone"
         @dragover.prevent
@@ -83,6 +95,22 @@ const onDrop = (e: DragEvent) => {
         @click="onClick"
         @drop="onDrop"
       />
+      <div
+        class="media-info"
+        v-if="media"
+        @dragover.prevent
+        @dragenter="onDragEnter"
+        @dragleave="onDragLeave"
+        @drop="onDrop"
+        @click="openMedia"
+      >
+        <div class="media-type">
+          <v-icon v-if="media.type.startsWith('image/')">mdi-image</v-icon>
+          <v-icon v-else-if="media.type.startsWith('video/')">mdi-video</v-icon>
+          <v-icon v-else-if="media.type.startsWith('audio/')">mdi-music</v-icon>
+        </div>
+        <div class="media-name">{{ media.name }}</div>
+      </div>
     </div>
     <div class="percent" v-if="percent !== undefined">
       <v-progress-linear :model-value="percent" />
@@ -115,9 +143,20 @@ const onDrop = (e: DragEvent) => {
       right: 0;
       bottom: 0;
     }
+    .media-info {
+      display: flex;
+      column-gap: 8px;
+      align-items: center;
+      z-index: 1;
+    }
     &.error {
       border-color: rgba(var(--v-theme-error), 1);
       color: rgba(var(--v-theme-error), 1);
+    }
+    &.active:not(.disabled) {
+      border: 1px solid;
+      border-color: rgba(#000000, 0.38);
+      color: rgba(#000000, 0.87);
     }
     &.drag-over:not(.disabled):not(.error) {
       background: rgba(var(--v-theme-primary), 0.1);

@@ -17,14 +17,14 @@ export const useCardStore = defineStore("card", () => {
 
   const editRef = ref<Card | null>(null)
   const editOpenRef = ref(false)
+  const editWithThemeRef = ref(false)
 
-  const openNewCard = (theme: Theme) => {
-    newRef.value = theme
+  const openNewCard = (theme?: Theme) => {
+    newRef.value = theme ?? null
     newOpenRef.value = true
   }
-  const newCard = async () => {
-    // const card = await Card.create({ title, description, categoryId })
-    // cardsRef.value.push(card)
+  const newCard = async (card: Card) => {
+    cardsRef.value.push(card)
     newOpenRef.value = false
   }
 
@@ -39,11 +39,12 @@ export const useCardStore = defineStore("card", () => {
     deleteOpenRef.value = false
   }
 
-  const openEditCard = (card: Card) => {
+  const openEditCard = (card: Card, withTheme?: boolean) => {
     editRef.value = card
     editOpenRef.value = true
+    editWithThemeRef.value = !!withTheme
   }
-  const editCard = async (card: Card) => {
+  const editCard = async () => {
     cardsRef.value = cardsRef.value.slice()
     editRef.value = null
     editOpenRef.value = false
@@ -74,5 +75,6 @@ export const useCardStore = defineStore("card", () => {
     editOpen: editOpenRef,
     openEdit: openEditCard,
     edit: editCard,
+    editWithTheme: editWithThemeRef,
   }
 })

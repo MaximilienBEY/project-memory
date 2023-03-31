@@ -17,6 +17,7 @@ specifiers:
   eslint-plugin-prettier: ^4.2.1
   eslint-plugin-simple-import-sort: ^10.0.0
   eslint-plugin-vue: ^9.9.0
+  ffprobe-wasm: ^0.3.1
   hls.js: ^1.3.5
   pinia: ^2.0.23
   prettier: ^2.8.4
@@ -37,6 +38,7 @@ dependencies:
   '@ffmpeg/ffmpeg': 0.11.6
   '@mdi/font': 7.0.96
   dexie: 3.2.3
+  ffprobe-wasm: 0.3.1
   hls.js: 1.3.5
   pinia: 2.0.33_hmuptsblhheur2tugfgucj7gc4
   roboto-fontface: 0.10.0
@@ -1328,6 +1330,10 @@ packages:
     dependencies:
       reusify: 1.0.4
     dev: true
+
+  /ffprobe-wasm/0.3.1:
+    resolution: {integrity: sha512-Pyrv/5z/jRzy/csFvgoYZM1wE+jhFpWtFt5AyowepW0ZFvVo9iM5zU0NkZyeAugFyxKZ9Y9wBtlHDhsIcP4e7Q==}
+    dev: false
 
   /file-entry-cache/6.0.1:
     resolution: {integrity: sha512-7Gps/XWymbLk2QLYK4NzpMOrYjMhdIxXuIvy2QBsLE6ljuodKvdkWs/cpyJJ3CVIVpH0Oi1Hvg1ovbMzLdFBBg==}

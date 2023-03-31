@@ -12,18 +12,31 @@ class Card extends Model {
   declare title: string
 
   @Column()
-  declare rectoType: "text" | "image" | "audio" | "video"
+  declare rectoType: "text" | "media"
   @Column()
   declare rectoText?: string
   @Column()
   declare rectoMedia?: Uint8Array
+  @Column()
+  declare rectoMediaType?: string
+  @Column()
+  declare rectoMediaAlt?: string
 
   @Column()
-  declare versoType: "text" | "image" | "audio" | "video"
+  declare versoType: "text" | "media"
   @Column()
   declare versoText?: string
   @Column()
   declare versoMedia?: Uint8Array
+  @Column()
+  declare versoMediaType?: string
+  @Column()
+  declare versoMediaAlt?: string
+
+  @Column()
+  declare streak: number
+  @Column()
+  declare lastStreak?: Date
 
   @ForeignKey(() => Theme)
   @Column()

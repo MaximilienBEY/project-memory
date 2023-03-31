@@ -2,13 +2,18 @@
 import { ref, watch } from "vue"
 
 import Dropzone from "@/components/Dropzone.vue"
+import Card from "@/models/card"
 import { useCardStore } from "@/store/card"
 import { useFfmpegStore } from "@/store/ffmpeg"
+import { useThemeStore } from "@/store/theme"
+import { MediaInterface } from "@/types/card"
 
 const card = useCardStore()
+const theme = useThemeStore()
 const ffmpeg = useFfmpegStore()
 
 const title = ref("")
+const themeId = ref<number | null>(null)
 const loading = ref(false)
 const showError = ref(false)
 
@@ -16,36 +21,70 @@ const convertingType = ref<"recto" | "verso" | null>(null)
 
 const rectoType = ref("Text")
 const rectoContent = ref("")
-const rectoMedia = ref<{
-  data: Uint8Array
-  url: string
-  type: "image" | "video" | "audio"
-  name: string
-} | null>(null)
+const rectoMedia = ref<MediaInterface | null>(null)
 
 const versoType = ref("Text")
 const versoContent = ref("")
-const versoMedia = ref<{
-  data: Uint8Array
-  url: string
-} | null>(null)
+const versoMedia = ref<MediaInterface | null>(null)
 
+const refreshValue = () => {
+  title.value = ""
+  themeId.value = null
+  rectoType.value = "Text"
+  rectoContent.value = ""
+  rectoMedia.value = null
+  versoType.value = "Text"
+  versoContent.value = ""
+  versoMedia.value = null
+  showError.value = false
+}
 const create = async () => {
-  if (!card.newCard) return
+  const themId = card.newCard?.id ?? themeId.value
   if (
     !title.value ||
     convertingType.value ||
     (rectoType.value === "Text" && !rectoContent.value) ||
     (rectoType.value === "Media" && !rectoMedia.value) ||
     (versoType.value === "Text" && !versoContent.value) ||
-    (versoType.value === "Media" && !versoMedia.value)
+    (versoType.value === "Media" && !versoMedia.value) ||
+    themId === null
   ) {
     showError.value = true
     return
   }
   loading.value = true
-  // await card.new({
-  // })
+
+  const c = await Card.create({
+    title: title.value,
+    ...(rectoType.value === "Text"
+      ? {
+          rectoType: "text",
+          rectoText: rectoContent.value,
+        }
+      : {
+          rectoType: "media",
+          rectoMedia: rectoMedia.value!.data,
+          rectoMediaType: rectoMedia.value!.type,
+          rectoMediaAlt: rectoMedia.value!.name,
+        }),
+    ...(versoType.value === "Text"
+      ? {
+          versoType: "text",
+          versoText: versoContent.value,
+        }
+      : {
+          versoType: "media",
+          versoMedia: versoMedia.value!.data,
+          versoMediaType: versoMedia.value!.type,
+          versoMediaAlt: versoMedia.value!.name,
+        }),
+    streak: 0,
+    themeId: themId,
+  })
+  await card.new(c)
+
+  loading.value = false
+  refreshValue()
 }
 const onMediaChange = async (type: "recto" | "verso", file: File) => {
   if (convertingType.value) return
@@ -62,27 +101,21 @@ const onMediaChange = async (type: "recto" | "verso", file: File) => {
       reader.readAsArrayBuffer(file)
     })
     const url = URL.createObjectURL(new Blob([data.buffer], { type: file.type }))
-    if (type === "recto") rectoMedia.value = { data, type: "image", name: file.name, url }
-    else versoMedia.value = { data, url }
+    const mediaData = { data, type: file.type, name: file.name, url }
+    if (type === "recto") rectoMedia.value = mediaData
+    else versoMedia.value = mediaData
   } else {
     const data =
       fileType === "audio"
         ? await ffmpeg.convertAudio(file)
         : await ffmpeg.convertVideo(file)
+    if (!data) return (convertingType.value = null)
 
-    const url = URL.createObjectURL(
-      new Blob([data.buffer], {
-        type: fileType === "video" ? "video/mp4" : "audio/mp3",
-      }),
-    )
-    if (type === "recto")
-      rectoMedia.value = {
-        data,
-        type: fileType as "image" | "video",
-        name: file.name,
-        url,
-      }
-    else versoMedia.value = { data, url }
+    const mediaType = fileType === "video" ? "video/mp4" : "audio/mp3"
+    const url = URL.createObjectURL(new Blob([data.buffer], { type: mediaType }))
+    const mediaData = { data, type: mediaType, name: file.name, url }
+    if (type === "recto") rectoMedia.value = mediaData
+    else versoMedia.value = mediaData
   }
 
   convertingType.value = null
@@ -91,8 +124,7 @@ const onMediaChange = async (type: "recto" | "verso", file: File) => {
 watch([card], ([card]) => {
   if (card.newOpen) return
 
-  title.value = ""
-  showError.value = false
+  refreshValue()
 })
 watch(
   [title, rectoType, rectoContent, rectoMedia, versoType, versoContent, versoMedia],
@@ -103,7 +135,8 @@ watch(
       ((rectoType.value === "Text" && rectoContent.value) ||
         (rectoType.value === "Media" && rectoMedia.value)) &&
       ((versoType.value === "Text" && versoContent.value) ||
-        (versoType.value === "Media" && versoMedia.value))
+        (versoType.value === "Media" && versoMedia.value)) &&
+      (themeId.value || card.newCard)
     )
       showError.value = false
   },
@@ -126,10 +159,24 @@ watch(
             required
             variant="outlined"
           />
+          <v-autocomplete
+            v-if="!card.newCard?.id"
+            v-model="themeId"
+            :error-messages="showError && !themeId ? 'Theme is required' : ''"
+            :items="theme.list"
+            item-text="title"
+            item-value="id"
+            label="Theme"
+            variant="outlined"
+          />
         </v-form>
         <div class="card-sides">
           <div class="card-side">
-            <h6 class="text-h6 font-weight-regular text-center">Recto</h6>
+            <h6
+              class="text-body-1 text-sm-h6 mb-2 mb-sm-1 font-weight-regular text-center"
+            >
+              Recto
+            </h6>
             <v-select
               label="Type"
               :items="['Text', 'Media']"
@@ -166,12 +213,17 @@ watch(
                       : 'Other side is converting...'
                   "
                   :percent="convertingType === 'recto' ? ffmpeg.percent : undefined"
+                  :media="rectoMedia"
                 />
               </div>
             </div>
           </div>
           <div class="card-side">
-            <h6 class="text-h6 font-weight-regular text-center">Verso</h6>
+            <h6
+              class="text-body-1 text-sm-h6 mb-2 mb-sm-1 font-weight-regular text-center"
+            >
+              Verso
+            </h6>
             <v-select
               label="Type"
               :items="['Text', 'Media']"
@@ -200,6 +252,7 @@ watch(
               <div :class="`dropzone-container ${versoType === 'Media' ? 'active' : ''}`">
                 <Dropzone
                   @file-change="($file) => onMediaChange('verso', $file)"
+                  :error="showError && (convertingType === 'verso' || !versoMedia)"
                   :disabled="!!convertingType"
                   :disabled-text="
                     convertingType === 'verso'
@@ -207,6 +260,7 @@ watch(
                       : 'Other side is converting...'
                   "
                   :percent="convertingType === 'verso' ? ffmpeg.percent : undefined"
+                  :media="versoMedia"
                 />
               </div>
             </div>
@@ -230,6 +284,9 @@ watch(
 .card-sides {
   display: flex;
   column-gap: 32px;
+  @media (max-width: 600px) {
+    column-gap: 16px;
+  }
   .card-side {
     flex: 1;
     .card-content {

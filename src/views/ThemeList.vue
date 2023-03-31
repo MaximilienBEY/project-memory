@@ -31,27 +31,27 @@ const handleMenu = (value: string, c: Theme) => {
         <v-row>
           <v-col v-for="t in theme.list" :key="t.id" cols="12" sm="6" md="4">
             <v-card elevation="4" :to="`/categories/${t.categoryId}/themes/${t.id}`">
-              <template v-slot:title>
-                <div class="d-flex justify-space-between align-center">
-                  <h6 class="text-h6">{{ t.title }}</h6>
-                  <v-btn size="small" icon variant="text">
-                    <v-icon>mdi-dots-vertical</v-icon>
-                    <v-menu activator="parent">
-                      <v-list
-                        @click:select="($event) => handleMenu($event.id as string, t)"
-                      >
-                        <v-list-item value="edit">Edit</v-list-item>
-                        <v-list-item value="delete">Delete</v-list-item>
-                      </v-list>
-                    </v-menu>
-                  </v-btn>
-                </div>
-              </template>
-              <template v-slot:text> {{ t.description ?? "No description" }} </template>
+              <div class="card-title-container">
+                <h6 class="text-h6" :title="t.title">{{ t.title }}</h6>
+                <v-btn size="small" icon variant="text" @click.stop.prevent>
+                  <v-icon>mdi-dots-vertical</v-icon>
+                  <v-menu activator="parent">
+                    <v-list
+                      @click:select="($event) => handleMenu($event.id as string, t)"
+                    >
+                      <v-list-item value="edit">Edit</v-list-item>
+                      <v-list-item value="delete">Delete</v-list-item>
+                    </v-list>
+                  </v-menu>
+                </v-btn>
+              </div>
+              <div class="card-description-container">
+                {{ t.description ?? "No description" }}
+              </div>
             </v-card>
           </v-col>
-        </v-row></template
-      >
+        </v-row>
+      </template>
     </v-container>
   </div>
 </template>

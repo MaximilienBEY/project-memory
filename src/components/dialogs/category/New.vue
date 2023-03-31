@@ -10,6 +10,12 @@ const descriptionRef = ref("")
 const loading = ref(false)
 const showError = ref(false)
 
+const refreshValue = () => {
+  titleRef.value = ""
+  descriptionRef.value = ""
+  showError.value = false
+}
+
 const create = async () => {
   if (!titleRef.value) {
     showError.value = true
@@ -22,21 +28,16 @@ const create = async () => {
   })
 
   loading.value = false
-  titleRef.value = ""
-  descriptionRef.value = ""
-  showError.value = false
+  refreshValue()
 }
 
 watch([category], ([category]) => {
   if (category.newOpen) return
 
-  titleRef.value = ""
-  descriptionRef.value = ""
-  showError.value = false
+  refreshValue()
 })
 watch([titleRef], () => {
   if (titleRef.value) showError.value = false
-  else showError.value = true
 })
 </script>
 

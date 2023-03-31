@@ -12,3 +12,9 @@ import Navbar from "./components/Navbar.vue"
     </v-main>
   </v-app>
 </template>
+
+<style lang="scss">
+.v-breadcrumbs {
+  flex-wrap: wrap;
+}
+</style>

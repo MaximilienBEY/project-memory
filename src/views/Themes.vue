@@ -67,25 +67,25 @@ const handleMenu = (value: string, t: Theme) => {
                 elevation="4"
                 :to="`/categories/${actualCategory.id}/themes/${theme.id}`"
               >
-                <template v-slot:title>
-                  <div class="d-flex justify-space-between align-center">
-                    <h6 class="text-h6">{{ theme.title }}</h6>
-                    <v-btn size="small" icon variant="text" @click.stop.prevent>
-                      <v-icon>mdi-dots-vertical</v-icon>
-                      <v-menu activator="parent">
-                        <v-list
-                          @click:select="($event) => handleMenu($event.id as string, theme)"
-                        >
-                          <v-list-item value="edit">Edit</v-list-item>
-                          <v-list-item value="delete">Delete</v-list-item>
-                        </v-list>
-                      </v-menu>
-                    </v-btn>
-                  </div>
-                </template>
-                <template v-slot:text>
+                <div class="card-title-container">
+                  <h6 class="text-h6" :title="theme.title">
+                    {{ theme.title }}
+                  </h6>
+                  <v-btn size="small" icon variant="text" @click.stop.prevent>
+                    <v-icon>mdi-dots-vertical</v-icon>
+                    <v-menu activator="parent">
+                      <v-list
+                        @click:select="($event) => handleMenu($event.id as string, theme)"
+                      >
+                        <v-list-item value="edit">Edit</v-list-item>
+                        <v-list-item value="delete">Delete</v-list-item>
+                      </v-list>
+                    </v-menu>
+                  </v-btn>
+                </div>
+                <div class="card-description-container">
                   {{ theme.description ?? "No description" }}
-                </template>
+                </div>
               </v-card>
             </v-col>
           </v-row></template

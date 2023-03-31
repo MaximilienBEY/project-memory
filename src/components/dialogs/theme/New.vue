@@ -13,6 +13,12 @@ const categoryId = ref<number | null>(null)
 const loading = ref(false)
 const showError = ref(false)
 
+const refreshValue = () => {
+  titleRef.value = ""
+  descriptionRef.value = ""
+  categoryId.value = null
+  showError.value = false
+}
 const create = async () => {
   const catId = theme.newTheme?.id ?? categoryId.value
   if (!titleRef.value || catId === null) {
@@ -27,22 +33,16 @@ const create = async () => {
   })
 
   loading.value = false
-  titleRef.value = ""
-  descriptionRef.value = ""
-  showError.value = false
+  refreshValue()
 }
 
 watch([theme], ([theme]) => {
   if (theme.newOpen) return
 
-  titleRef.value = ""
-  descriptionRef.value = ""
-  categoryId.value = null
-  showError.value = false
+  refreshValue()
 })
-watch([titleRef, categoryId], () => {
-  if (titleRef.value && categoryId.value) showError.value = false
-  else showError.value = true
+watch([theme, titleRef, categoryId], () => {
+  if (titleRef.value && (categoryId.value || theme.newTheme)) showError.value = false
 })
 </script>
 

@@ -37,23 +37,23 @@ const handleMenu = (value: string, c: Category) => {
         <v-row>
           <v-col v-for="c in category.list" :key="c.id" cols="12" sm="6" md="4">
             <v-card elevation="4" :to="`/categories/${c.id}`">
-              <template v-slot:title>
-                <div class="d-flex justify-space-between align-center">
-                  <h6 class="text-h6">{{ c.title }}</h6>
-                  <v-btn size="small" icon variant="text" @click.stop.prevent>
-                    <v-icon>mdi-dots-vertical</v-icon>
-                    <v-menu activator="parent">
-                      <v-list
-                        @click:select="($event) => handleMenu($event.id as string, c)"
-                      >
-                        <v-list-item value="edit">Edit</v-list-item>
-                        <v-list-item value="delete">Delete</v-list-item>
-                      </v-list>
-                    </v-menu>
-                  </v-btn>
-                </div>
-              </template>
-              <template v-slot:text> {{ c.description ?? "No description" }} </template>
+              <div class="card-title-container">
+                <h6 class="text-h6" :title="c.title">{{ c.title }}</h6>
+                <v-btn size="small" icon variant="text" @click.stop.prevent>
+                  <v-icon>mdi-dots-vertical</v-icon>
+                  <v-menu activator="parent">
+                    <v-list
+                      @click:select="($event) => handleMenu($event.id as string, c)"
+                    >
+                      <v-list-item value="edit">Edit</v-list-item>
+                      <v-list-item value="delete">Delete</v-list-item>
+                    </v-list>
+                  </v-menu>
+                </v-btn>
+              </div>
+              <div class="card-description-container">
+                {{ c.description ?? "No description" }}
+              </div>
             </v-card>
           </v-col>
         </v-row></template
