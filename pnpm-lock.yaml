@@ -99,24 +99,6 @@ devDependencies:
   vue-tsc:
     specifier: ^1.0.9
     version: 1.2.0(typescript@4.9.5)
-  workbox-cacheable-response:
-    specifier: ^6.5.4
-    version: 6.5.4
-  workbox-core:
-    specifier: ^6.5.4
-    version: 6.5.4
-  workbox-expiration:
-    specifier: ^6.5.4
-    version: 6.5.4
-  workbox-precaching:
-    specifier: ^6.5.4
-    version: 6.5.4
-  workbox-routing:
-    specifier: ^6.5.4
-    version: 6.5.4
-  workbox-strategies:
-    specifier: ^6.5.4
-    version: 6.5.4
 
 packages:
 
