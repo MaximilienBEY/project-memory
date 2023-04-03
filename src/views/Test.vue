@@ -1,14 +1,10 @@
 <script lang="ts" setup>
-import Dropzone from "@/components/Dropzone.vue"
-
-const onFileChange = (file: File) => {
-  console.log(file)
-}
+import HelloWorld from "@/components/HelloWorld.vue"
 </script>
 
 <template>
   <div>
-    <Dropzone disabled @file-change="onFileChange" />
+    <HelloWorld />
   </div>
 </template>
 
