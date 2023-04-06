@@ -35,7 +35,7 @@ export default defineConfig({
           },
           {
             handler: "CacheFirst",
-            urlPattern: /.*\/assets\/.*\.(woff2|jpg|png)(.+)?/i,
+            urlPattern: /.*\.(woff2|jpg|png|ico)(.+)?/i,
             options: {
               cacheName: "assets-cache",
               expiration: {
