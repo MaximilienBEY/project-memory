@@ -51,7 +51,8 @@ const createCard = async () => {
       color="primary"
       :loading="loading || ffmpeg.loading"
       @click="createCard"
-      >Créer</v-btn
+    >
+      Créer</v-btn
     >
     <!-- <video v-if="videoUrl" :src="videoUrl" controls></video> -->
   </v-container>

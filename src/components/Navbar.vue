@@ -41,7 +41,7 @@ const drawer = ref(false)
           <v-btn to="/cards" class="text-subtitle-1" :active="false">Cards</v-btn>
         </li>
       </ul>
-      <v-btn color="primary" variant="flat" to="/quiz">Start a quiz</v-btn>
+      <v-btn color="primary" variant="flat" to="/study">Start a revision</v-btn>
       <v-btn
         class="d-block d-sm-none ml-2"
         size="small"
