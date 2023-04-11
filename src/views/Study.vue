@@ -113,7 +113,7 @@ watchEffect(() => {
         @click="handleRetry"
         :disabled="!wrongCards.length"
       >
-        Retry
+        Review
       </v-btn>
     </template>
     <Questions v-else-if="selectedCards" :cards="selectedCards" @finish="handleFinish" />
